@@ -1,4 +1,4 @@
-# MERN + TypeScript: Star Wars Character App
+# Next.js (App Router) + TypeScript: Star Wars Character App
 
 A responsive Star Wars character explorer built with **Next.js (App Router) + React 19 + TypeScript + Tailwind CSS v4**, powered by the public [SWAPI](https://swapi.info) REST API. It fetches the entire dataset once and caches it with **TanStack Query**, then delivers a fast client-side experience for **searching, filtering, and pagination** over that cached array.
 
@@ -8,11 +8,9 @@ Optional brownie-point features are included: **search + combined filters**, **m
 
 ## Live demo & submission
 
-> Update these once deployed / recorded:
-
-- **Hosted app (Vercel / Netlify / Cloudflare Pages):** `https://<your-app>.vercel.app`
+- **Hosted app (Vercel):** <https://tsx-mern-6-aug-2026.vercel.app/>
 - **Repo:** `tsx-mern-05Aug2026`
-- **Demo video (YouTube / GDrive):** `https://...`
+- **Demo video (YouTube / GDrive):** _not recorded yet — link will be added here once available._
 
 **Demo login:** username `admin` / password `admin123`.
 
@@ -92,6 +90,17 @@ pnpm build
 2. `useCharacters` (`src/hooks/useCharacters.ts`) holds the search/filter state and derives the filtered + paginated slice with `useMemo` + `useDeferredValue`.
 3. Cards, modal, and filters are pure presentational components in `src/components/`.
 
+#### Caching with TanStack Query
+- Each resource is fetched through a dedicated `useQuery` with a **stable query key** — `["swapi", "people"]`, `["swapi", "planets"]`, etc.
+- TanStack Query stores the resolved data in its in-memory cache keyed by that query key, so navigation doesn't re-download. Every consumer (the grid, the filters, and the details-modal homeworld block) uses **the same cache entry** — the data is fetched once and shared, no duplicate network calls.
+- `usePeopleWithLookups` (+ `useLookups`) builds the `people` list plus `Map`s of `planets/species/films` (keyed by their numeric id) from the cached arrays, and **aggregates pending/error status** so a failed or still-loading lookup correctly reports loading/error instead of a false "ready" state.
+- Queries are cached with retry disabled in tests and refetched/labeled by TanStack's built-in stale-time defaults; `refetch` is wired to the error UI's **Retry** button.
+
+#### Client-side pagination
+- `src/lib/swapi.ts` still requests a single dataset (following the API's `next` pagination envelope and merging all pages into one array), but **paging on the screen is purely client-side**. `useCharacters` slices the cached `people` array into pages (default `12`/page).
+- Search (debounced via `useDeferredValue`) + filters (homeworld, species, film) are combined (AND) in a `useMemo` to produce the filtered slice, and **pagination resets to page 1 whenever the search or a filter changes**.
+- `<CharacterPagination />` renders the current page / total, prev/next, and numbered pages; the page state is just React state — changing pages never hits the network.
+
 ### Mock authentication (http-only cookies)
 - `app/api/auth/login` validates the fake credentials and sets two **http-only** cookies: `sw_access` (short-lived JWT) and `sw_refresh`.
 - `app/api/auth/refresh` exchanges the refresh cookie for a new access cookie.
@@ -103,7 +112,7 @@ pnpm build
 
 ## Screenshots
 
-> Add 3–4 screenshots to `public/screenshots/` and reference them here (drop the `.png` files in that folder).
+Screenshots live in `public/screenshots/` (`login.png`, `grid.png`, `modal.png`, `filters.png`).
 
 | Login | Character grid |
 |-------|----------------|

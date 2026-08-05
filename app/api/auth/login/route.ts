@@ -26,8 +26,14 @@ export async function POST(request: NextRequest) {
     const accessTtl = getAccessTtlSeconds();
     const refreshTtl = getRefreshTtlSeconds();
 
-    const accessToken = signToken({ sub: USER.id, username: USER.username, role: USER.role }, accessTtl);
-    const refreshToken = signToken({ sub: USER.id, username: USER.username, role: USER.role }, refreshTtl);
+    const accessToken = signToken(
+      { sub: USER.id, username: USER.username, role: USER.role, type: "access" },
+      accessTtl,
+    );
+    const refreshToken = signToken(
+      { sub: USER.id, username: USER.username, role: USER.role, type: "refresh" },
+      refreshTtl,
+    );
 
     const response = NextResponse.json({
       user: { id: USER.id, username: USER.username, role: USER.role },

@@ -76,12 +76,20 @@ export const HUMAN: Species = {
 };
 
 export const DROID: Species = {
-  ...HUMAN,
   name: "Droid",
   classification: "artificial",
   designation: "sentient",
   average_height: "n/a",
+  skin_colors: "n/a",
+  hair_colors: "n/a",
+  eye_colors: "n/a",
+  average_lifespan: "indefinite",
+  homeworld: null,
   language: "n/a",
+  people: [`${AU}/people/2`, `${AU}/people/3`, `${AU}/people/8`],
+  films: [`${AU}/films/1`, `${AU}/films/2`, `${AU}/films/3`],
+  created: "2014-12-10T15:16:30.837000Z",
+  edited: "2014-12-20T21:31:54.397000Z",
   url: `${AU}/species/2`,
 };
 

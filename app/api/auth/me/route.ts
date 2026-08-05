@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
   const accessToken = request.cookies.get(ACCESS_COOKIE)?.value;
   const payload = verifyToken(accessToken);
 
-  if (!payload) {
+  if (!payload || payload.type !== "access") {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 

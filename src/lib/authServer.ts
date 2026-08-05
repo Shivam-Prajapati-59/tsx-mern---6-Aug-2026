@@ -9,10 +9,13 @@ const DEFAULT_SECRET = "dev-insecure-secret-change-me";
 const DEFAULT_ACCESS_TTL_SECONDS = 120; // short so silent refresh is demonstrable
 const DEFAULT_REFRESH_TTL_SECONDS = 60 * 60; // 1 hour
 
+export type TokenPurpose = "access" | "refresh";
+
 export type TokenPayload = {
   sub: string;
   username: string;
   role: string;
+  type: TokenPurpose;
   exp: number;
   iat: number;
 };
@@ -26,7 +29,14 @@ function base64UrlDecode(value: string): string {
 }
 
 export function getSecret(): string {
-  return process.env.JWT_SECRET ?? DEFAULT_SECRET;
+  const secret = process.env.JWT_SECRET;
+  if (secret) {
+    return secret;
+  }
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("JWT_SECRET must be set in production; refusing to use an insecure fallback secret.");
+  }
+  return DEFAULT_SECRET;
 }
 
 export function getAccessTtlSeconds(): number {

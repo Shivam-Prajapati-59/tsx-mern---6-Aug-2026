@@ -1,14 +1,15 @@
 "use client";
 
-import { ChevronDownIcon, SearchIcon, XIcon } from "lucide-react";
+import { SearchIcon, XIcon } from "lucide-react";
 import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/src/components/ui/dropdown-menu";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/src/components/ui/select";
 import { idFromUrl, type Film, type Planet, type Species } from "@/src/lib/swapi";
 import { titleCase } from "@/src/lib/format";
 import type { CharacterFilters } from "@/src/hooks/useCharacters";
@@ -44,29 +45,27 @@ function FilterSelect({
   placeholder: string;
   ariaLabel: string;
 }) {
+  const selectedLabel = options.find((option) => option.value === value)?.label ?? placeholder;
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        aria-label={ariaLabel}
-        role="combobox"
-        className="inline-flex h-8 w-full items-center justify-between gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-medium whitespace-nowrap outline-none hover:bg-muted focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+    <Select value={value} onValueChange={(next) => onValueChange(next ?? "")}>
+      <SelectTrigger aria-label={ariaLabel} className="w-full bg-background">
+        <SelectValue>{selectedLabel}</SelectValue>
+      </SelectTrigger>
+      <SelectContent
+        align="start"
+        alignItemWithTrigger={false}
+        side="bottom"
+        sideOffset={4}
+        className="min-w-(--anchor-width)"
       >
-        <span className="truncate">{options.find((option) => option.value === value)?.label ?? placeholder}</span>
-        <ChevronDownIcon className="size-4 shrink-0 opacity-60" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-(--anchor-width)">
         {options.map((option) => (
-          <DropdownMenuItem
-            key={option.value}
-            role="option"
-            aria-selected={option.value === value}
-            onClick={() => onValueChange(option.value)}
-          >
+          <SelectItem key={option.value} value={option.value}>
             {option.label}
-          </DropdownMenuItem>
+          </SelectItem>
         ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </SelectContent>
+    </Select>
   );
 }
 

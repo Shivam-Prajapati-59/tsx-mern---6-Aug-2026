@@ -49,7 +49,9 @@ function DetailRow({
         <Icon className="size-4" />
         <span className="font-heading text-[0.68rem] font-medium uppercase tracking-wide">{label}</span>
       </span>
-      <span className="truncate font-sans text-sm font-semibold text-foreground">{value}</span>
+      <span className="min-w-0 flex-1 truncate text-right font-sans text-sm font-semibold text-foreground">
+        {value}
+      </span>
     </div>
   );
 }

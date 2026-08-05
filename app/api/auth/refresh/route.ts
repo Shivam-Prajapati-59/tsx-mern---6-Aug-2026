@@ -12,13 +12,13 @@ export async function POST(request: NextRequest) {
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
   const payload = verifyToken(refreshToken);
 
-  if (!payload) {
+  if (!payload || payload.type !== "refresh") {
     return NextResponse.json({ error: "Session expired. Please sign in again." }, { status: 401 });
   }
 
   const accessTtl = getAccessTtlSeconds();
   const accessToken = signToken(
-    { sub: payload.sub, username: payload.username, role: payload.role },
+    { sub: payload.sub, username: payload.username, role: payload.role, type: "access" },
     accessTtl,
   );
 

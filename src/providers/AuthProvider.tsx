@@ -41,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inFlightRefresh = useRef<Promise<AuthSession> | null>(null);
   const refreshRef = useRef<() => Promise<void>>(async () => {});
+  const sessionGenRef = useRef(0);
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) {
@@ -71,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const refreshSession = useCallback(async () => {
+    const gen = sessionGenRef.current;
     if (!inFlightRefresh.current) {
       inFlightRefresh.current = api
         .post<AuthSession>("/api/auth/refresh")
@@ -79,6 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
     }
     const session = await inFlightRefresh.current;
+    if (sessionGenRef.current !== gen) return;
     applySession(session);
   }, [applySession]);
 
@@ -88,7 +91,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (username: string, password: string) => {
+      const gen = sessionGenRef.current;
       const session = await api.post<AuthSession>("/api/auth/login", { username, password });
+      if (sessionGenRef.current !== gen) return;
       applySession(session);
     },
     [applySession],
@@ -96,6 +101,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     clearTimer();
+    sessionGenRef.current += 1;
+    inFlightRefresh.current = null;
     await api.post("/api/auth/logout");
     setUser(null);
     setStatus("unauthenticated");
@@ -103,31 +110,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
+    const gen = sessionGenRef.current;
     api
       .get<AuthSession>("/api/auth/me")
       .then((session) => {
-        if (active) applySession(session);
+        if (active && sessionGenRef.current === gen) applySession(session);
       })
       .catch(() => {
-        if (active) setStatus("unauthenticated");
+        if (!active || sessionGenRef.current !== gen) return;
+        refreshSession().catch(() => {
+          if (!active || sessionGenRef.current !== gen) return;
+          setUser(null);
+          setStatus("unauthenticated");
+        });
       });
 
     return () => {
       active = false;
       clearTimer();
     };
-  }, [applySession, clearTimer]);
+  }, [applySession, clearTimer, refreshSession]);
 
   useEffect(() => {
     const handleFocus = () => {
       if (status !== "authenticated") return;
-      api.get<AuthSession>("/api/auth/me").then((session) => {
-        applySession(session);
-      });
+      const gen = sessionGenRef.current;
+      api
+        .get<AuthSession>("/api/auth/me")
+        .then((session) => {
+          if (sessionGenRef.current === gen) applySession(session);
+        })
+        .catch(() => {
+          if (sessionGenRef.current !== gen) return;
+          refreshSession().catch(() => {
+            if (sessionGenRef.current !== gen) return;
+            setUser(null);
+            setStatus("unauthenticated");
+          });
+        });
     };
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
-  }, [status, applySession]);
+  }, [status, applySession, refreshSession]);
 
   return (
     <AuthContext.Provider value={{ status, user, login, logout }}>

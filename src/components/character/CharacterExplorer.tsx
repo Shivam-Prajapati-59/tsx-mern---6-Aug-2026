@@ -10,14 +10,14 @@ import { CharacterDetailsModal } from "@/src/components/character/CharacterDetai
 import { CharacterPagination } from "@/src/components/character/CharacterPagination";
 import { SearchAndFilterBar } from "@/src/components/character/SearchAndFilterBar";
 import { UserMenu } from "@/src/components/auth/UserMenu";
-import { DEFAULT_PAGE_SIZE } from "@/src/lib/constants";
+import { DEFAULT_PAGE_SIZE, IMAGE_SEED } from "@/src/lib/constants";
 import type { Person } from "@/src/lib/swapi";
 
 export function CharacterExplorer() {
   const { people, lookups, isLoading, isError, refetch } = usePeopleWithLookups();
   const controller = useCharacters({ people, pageSize: DEFAULT_PAGE_SIZE });
   const [selected, setSelected] = useState<Person | null>(null);
-  const [imageSeed] = useState<number>(() => Math.floor(Math.random() * 100_000));
+  const [imageSeed] = useState<number>(() => IMAGE_SEED);
 
   const emptyResults = useMemo(
     () => !isLoading && !isError && people.length > 0 && controller.currentItems.length === 0,

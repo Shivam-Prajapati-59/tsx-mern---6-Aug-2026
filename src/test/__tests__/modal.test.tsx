@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Home from "@/app/page";
@@ -46,10 +46,12 @@ describe("Star Wars character app integration", () => {
     expect(within(dialog).getByText("4")).toBeInTheDocument();
     expect(within(dialog).getByText("19BBY")).toBeInTheDocument();
 
-    expect(within(dialog).getByText("Tatooine")).toBeInTheDocument();
-    expect(within(dialog).getByText("Desert")).toBeInTheDocument();
-    expect(within(dialog).getByText("Arid")).toBeInTheDocument();
-    expect(within(dialog).getByText("2")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(within(dialog).getByText("Tatooine")).toBeInTheDocument();
+      expect(within(dialog).getByText("Desert")).toBeInTheDocument();
+      expect(within(dialog).getByText("Arid")).toBeInTheDocument();
+      expect(within(dialog).getByText("2")).toBeInTheDocument();
+    });
   });
 
   it("combines name search with a species filter", async () => {
@@ -61,19 +63,38 @@ describe("Star Wars character app integration", () => {
     const search = screen.getByRole("textbox", { name: /search characters/i });
     await user.type(search, "c-3po");
 
-    expect(screen.queryByRole("button", { name: /view details for luke skywalker/i })).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /view details for c-3po/i }),
-    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("button", { name: /view details for luke skywalker/i }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /view details for c-3po/i }),
+      ).toBeInTheDocument();
+    });
 
     const speciesSelect = screen.getByRole("combobox", { name: /filter by species/i });
     await user.click(speciesSelect);
-    const droidOption = await screen.findByRole("option", { name: "Droid" });
-    await user.click(droidOption);
+    await user.click(await screen.findByRole("option", { name: "Human" }));
 
-    expect(
-      screen.getByRole("button", { name: /view details for c-3po/i }),
-    ).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /view details for luke/i })).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("button", { name: /view details for c-3po/i }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /view details for luke/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    await user.click(speciesSelect);
+    await user.click(await screen.findByRole("option", { name: "Droid" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /view details for c-3po/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /view details for luke/i }),
+      ).not.toBeInTheDocument();
+    });
   });
 });
