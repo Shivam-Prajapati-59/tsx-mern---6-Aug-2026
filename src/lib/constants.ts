@@ -1,0 +1,1 @@
+export const STAR_WARS_PUBLIC_URL = "https://swapi.dev/api";
